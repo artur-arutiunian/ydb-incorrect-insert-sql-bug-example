@@ -1,5 +1,65 @@
 # Acme.BookStore
 
+Проект готов, миграции есть, коннекшин стринг настроен.
+
+Шаги для теста:
+1. В src/Acme.BookStore.EntityFrameworkCore запустить dotnet ef database update
+2. Запустить мигратор.
+
+Вся настройка производится в Acme.BookStore.EntityFrameworkCore (смотри BookStoreDbContextFactory и BookStoreEntityFrameworkCoreModule)
+
+Это мои обертки, чтобы подключить Ydb
+```csharp
+public static class DbContextConfigurationContextYdbExtensions
+{
+    public static DbContextOptionsBuilder UseYdb(
+        this AbpDbContextConfigurationContext context,
+        Action<YdbDbContextOptionsBuilder>? efYdbOptionsAction = null)
+    {
+        if (context.ExistingConnection != null)
+        {
+            return context.DbContextOptions.UseYdb(
+                connection: context.ExistingConnection,
+                efYdbOptionsAction: efYdbOptionsAction);
+        }
+
+        return context.DbContextOptions.UseYdb(
+            connectionString: context.ConnectionString,
+            efYdbOptionsAction: efYdbOptionsAction);
+    }
+}
+```
+
+```csharp
+public static class DbContextOptionsYdbExtensions
+{
+    public static void UseYdb(
+        this AbpDbContextOptions options,
+        Action<YdbDbContextOptionsBuilder>? efYdbOptionsAction = null)
+    {
+        options.Configure(context =>
+        {
+            context.UseYdb(efYdbOptionsAction);
+        });
+    }
+
+    public static void UseYdb<TDbContext>(
+        this AbpDbContextOptions options,
+        Action<YdbDbContextOptionsBuilder>? efYdbOptionsAction = null)
+        where TDbContext : AbpDbContext<TDbContext>
+    {
+        options.Configure<TDbContext>(context =>
+        {
+            context.UseYdb(efYdbOptionsAction);
+        });
+    }
+}
+```
+
+
+
+## Все что ниже, дефолтная настройка для запуска от Abp, в целом не нужно, но мб пригодится
+
 ## About this solution
 
 This is a layered startup solution based on [Domain Driven Design (DDD)](https://abp.io/docs/latest/framework/architecture/domain-driven-design) practises. All the fundamental ABP modules are already installed. 
