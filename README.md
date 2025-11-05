@@ -1,0 +1,1 @@
+# ydb-incorrect-insert-sql-bug-example
